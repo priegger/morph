@@ -140,7 +140,9 @@ func (host *Host) Reboot(sshContext *ssh.SSHContext) error {
 
 func (ctx *NixContext) GetBuildShell(deploymentPath string) (buildShell *string, err error) {
 
-	args := []string{"eval",
+	args := []string{
+		"--extra-experimental-features", "nix-command",
+		"eval",
 		"-f", ctx.EvalMachines, "info.buildShell",
 		"--arg", "networkExpr", deploymentPath,
 		"--json"}
@@ -163,7 +165,7 @@ func (ctx *NixContext) GetBuildShell(deploymentPath string) (buildShell *string,
 	err = cmd.Run()
 	if err != nil {
 		errorMessage := fmt.Sprintf(
-			"Error while running `nix eval ..`: %s", err.Error(),
+			"Error while running `nix eval ..`: %s\n%s", err.Error(), stdout.String(),
 		)
 		return buildShell, errors.New(errorMessage)
 	}
@@ -178,7 +180,9 @@ func (ctx *NixContext) GetBuildShell(deploymentPath string) (buildShell *string,
 
 func (ctx *NixContext) GetMachines(deploymentPath string) (deployment Deployment, err error) {
 
-	args := []string{"eval",
+	args := []string{
+		"--extra-experimental-features", "nix-command",
+		"eval",
 		"-f", ctx.EvalMachines, "info.deployment",
 		"--arg", "networkExpr", deploymentPath,
 		"--json"}
@@ -201,7 +205,7 @@ func (ctx *NixContext) GetMachines(deploymentPath string) (deployment Deployment
 	err = cmd.Run()
 	if err != nil {
 		errorMessage := fmt.Sprintf(
-			"Error while running `nix eval ..`: %s", err.Error(),
+			"Error while running `nix eval ..`: %s\n%s", err.Error(), stdout.String(),
 		)
 		return deployment, errors.New(errorMessage)
 	}
@@ -255,6 +259,7 @@ func (ctx *NixContext) BuildMachines(deploymentPath string, hosts []Host, nixArg
 		resultLinkPath = filepath.Join(tmpdir, "result")
 	}
 	args := []string{
+		"--extra-experimental-features", "nix-command",
 		"build",
 		"-f", ctx.EvalMachines,
 		"-v",
@@ -378,6 +383,7 @@ func Push(ctx *ssh.SSHContext, host Host, paths ...string) (err error) {
 	options := mkOptions(host)
 	for _, path := range paths {
 		args := []string{
+			"--extra-experimental-features", "nix-command",
 			"copy",
 			path,
 			"--to", "ssh://" + userArg + host.TargetHost + keyArg,
